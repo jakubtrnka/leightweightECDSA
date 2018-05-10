@@ -6,6 +6,17 @@
 #include <secp256k1.h>
 #include <openssl/sha.h>
 
+unsigned char * randomfill(unsigned char * blob, size_t len) {
+	FILE *fr = fopen("/dev/urandom", "rb");
+	fread((void *) blob, sizeof(unsigned char), len, fr);
+	if (ferror(fr)) {
+		printf("there has been some error loading randomness\n");
+		exit(1);
+	}
+	fclose(fr);
+	return blob;
+}
+
 unsigned char * doublesha(unsigned char * md, const char * msg) {
 	unsigned char tmp[SHA256_DIGEST_LENGTH];
 	return SHA256(SHA256((const unsigned char *) msg, strlen(msg), tmp), SHA256_DIGEST_LENGTH, md);
@@ -30,13 +41,13 @@ unsigned char * readhex(unsigned char * dat, const char * hex) {
 }
 
 unsigned char * sign( unsigned char * compact_signature, const char * msg, const unsigned char * raw_priv) {
-	unsigned char md[SHA256_DIGEST_LENGTH];
+	unsigned char md[SHA256_DIGEST_LENGTH], seed[1024];
 	secp256k1_context * ctx_sign;
 	secp256k1_ecdsa_signature sig_t;
-
+	
 	ctx_sign = secp256k1_context_create(SECP256K1_CONTEXT_SIGN);
-	if (! secp256k1_context_randomize(ctx_sign, NULL) ) printf("problem with randomization");
-	secp256k1_ecdsa_sign(ctx_sign, &sig_t, doublesha(md, msg), raw_priv, NULL, NULL);
+	if (! secp256k1_context_randomize(ctx_sign, randomfill(seed, 32))) printf("problem with randomization");
+	secp256k1_ecdsa_sign(ctx_sign, &sig_t, doublesha(md, msg), raw_priv, NULL, randomfill(seed, 1024));
 	secp256k1_ecdsa_signature_serialize_compact(ctx_sign, compact_signature, &sig_t);
 	secp256k1_context_destroy(ctx_sign);
 	return compact_signature;
