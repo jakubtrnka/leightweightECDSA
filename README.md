@@ -2,7 +2,7 @@
 Basic command line utility that produces/verifies ECDSA/double-sha256 on curve secp256k1.
 Reads text-message and hex-encoded private, public key or compact signature.
 
-Depends on libsecp256k1 and OpenSSL.
+Depends on libsecp256k1, needs read access to `/dev/urandom`.
 
 ## basic usage
 ```
