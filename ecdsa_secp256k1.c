@@ -4,7 +4,10 @@
 #include <string.h>
 
 #include <secp256k1.h>
-#include <openssl/sha.h>
+#include <c_sha256.h>
+//#include <openssl/sha.h>
+
+#define SHA256_DIGEST_LENGTH 32
 
 unsigned char * randomfill(unsigned char * blob, size_t len) {
 	FILE *fr = fopen("/dev/urandom", "rb");
@@ -18,8 +21,9 @@ unsigned char * randomfill(unsigned char * blob, size_t len) {
 }
 
 unsigned char * doublesha(unsigned char * md, const char * msg) {
-	unsigned char tmp[SHA256_DIGEST_LENGTH];
-	return SHA256(SHA256((const unsigned char *) msg, strlen(msg), tmp), SHA256_DIGEST_LENGTH, md);
+	//unsigned char tmp[SHA256_DIGEST_LENGTH];
+	//return SHA256(SHA256((const unsigned char *) msg, strlen(msg), tmp), SHA256_DIGEST_LENGTH, md);
+	return c_sha(md, c_sha(md, (const unsigned char *) msg, strlen(msg)), SHA256_DIGEST_LENGTH);
 }
 
 unsigned char * readhex(unsigned char * dat, const char * hex) {
