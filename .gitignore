@@ -52,3 +52,11 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+
+Sign_ecdsa
+Verify_ecdsa
