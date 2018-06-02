@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <secp256k1.h>
+#include <secp256k1_recovery.h>
 #include <c_sha256.h>
 //#include <openssl/sha.h>
 
@@ -44,7 +45,7 @@ unsigned char * readhex(unsigned char * dat, const char * hex) {
 	return dat;
 }
 
-unsigned char * sign( unsigned char * compact_signature, const char * msg, const unsigned char * raw_priv) {
+unsigned char * sign(unsigned char * compact_signature, const char * msg, const unsigned char * raw_priv) {
 	unsigned char md[SHA256_DIGEST_LENGTH], seed[1024];
 	secp256k1_context * ctx_sign;
 	secp256k1_ecdsa_signature sig_t;
@@ -55,6 +56,26 @@ unsigned char * sign( unsigned char * compact_signature, const char * msg, const
 	secp256k1_ecdsa_signature_serialize_compact(ctx_sign, compact_signature, &sig_t);
 	secp256k1_context_destroy(ctx_sign);
 	return compact_signature;
+}
+
+unsigned char * recovery_pubkey(unsigned char * pubkey, unsigned char * compact_signature, const char * msg) {
+	secp256k1_context * ctx;
+	secp256k1_ecdsa_signature sig_t;
+	unsigned char md[SHA256_DIGEST_LENGTH];
+	secp256k1_pubkey pub_t;
+	long l = 33;
+	ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
+	if (!secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &sig_t, compact_signature, 0)) {
+		printf("Given data failed to be parsed as signature\n");
+		exit(1);
+	}
+	if (!secp256k1_ecdsa_recover(ctx, &pub_t, &sig_t, doublesha(md, msg))) {
+		printf("Failed to restore public key\n");
+		exit(1);
+	}
+
+	secp256k1_ec_pubkey_serialize(ctx, pubkey, &l, &pub_t, SECP256K1_EC_COMPRESSED);
+	return pubkey;
 }
 
 int verify(const unsigned char * raw_sig, const char * msg, const unsigned char * raw_pub) {

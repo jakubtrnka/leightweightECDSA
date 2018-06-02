@@ -60,3 +60,4 @@ cmake_install.cmake
 
 Sign_ecdsa
 Verify_ecdsa
+Recovery_pubkey
